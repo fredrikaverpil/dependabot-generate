@@ -59,3 +59,4 @@ You can customize the following inputs.
 | ----------- | -------------------------------------- | -------- | -------- |
 | `scan-path` | The path to scan for dependency files. | `.`      | No       |
 | `interval`  | The update interval for dependencies.  | `weekly` | No       |
+| `ignore-dirs` | A comma-separated string of relative paths to ignore. | `''` | No |

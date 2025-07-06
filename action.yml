@@ -9,7 +9,11 @@ inputs:
     description: 'The update interval for dependencies.'
     required: false
     default: 'weekly'
-  runs:
+  ignore-dirs:
+    description: 'A comma-separated string of relative paths to ignore.'
+    required: false
+    default: ''
+runs:
   using: "composite"
   steps:
     - name: Set up Python
@@ -20,4 +24,4 @@ inputs:
       id: generate
       shell: bash
       run: |
-        python ${{ github.action_path }}/generate.py --scan-path ${{ inputs.scan-path }} --interval ${{ inputs.interval }}
+        python ${{ github.action_path }}/generate.py --scan-path ${{ inputs.scan-path }} --interval ${{ inputs.interval }} --ignore-dirs ${{ inputs.ignore-dirs }}

@@ -1,7 +1,8 @@
 import argparse
 import logging
-import os
 import sys
+from pathlib import Path
+
 
 
 # Map of file indicators to ecosystems.
@@ -50,7 +51,7 @@ FILE_ECOSYSTEM_MAP: dict[str, str] = {
 }
 
 
-def detect_package_ecosystems(directory: str) -> list[str]:
+def detect_package_ecosystems(directory: Path) -> list[str]:
     """
     Detect all package ecosystems in a directory.
     Returns a list of detected ecosystem names.
@@ -60,7 +61,7 @@ def detect_package_ecosystems(directory: str) -> list[str]:
 
     # Check for each file type
     for filename, ecosystem in FILE_ECOSYSTEM_MAP.items():
-        if os.path.exists(os.path.join(directory, filename)):
+        if (directory / filename).exists():
             found_ecosystems.add(ecosystem)
             logging.info(
                 f"Detected {ecosystem} ecosystem in {directory} via {filename}"
@@ -69,26 +70,28 @@ def detect_package_ecosystems(directory: str) -> list[str]:
     return list(found_ecosystems)
 
 
-def recursively_scan_directories(root_dir: str) -> list[str]:
+def recursively_scan_directories(root_dir: Path, ignore_dirs: list[str]) -> list[Path]:
     """
     Recursively scan directories for dependency files and return directories
     that contain at least one dependency file.
     """
-    directories_with_deps: set[str] = set()
+    directories_with_deps: set[Path] = set()
+    ignored_dirs_set = set(ignore_dirs)
 
-    for dirpath, _, filenames in os.walk(root_dir):
+    for dirpath_str, _, filenames in root_dir.walk():
+        dirpath = Path(dirpath_str)
+        # Skip ignored directories
+        if any(ignored_dir in str(dirpath) for ignored_dir in ignored_dirs_set):
+            logging.info(f"Skipping ignored directory: {dirpath}")
+            continue
+
         if any(indicator in filenames for indicator in FILE_ECOSYSTEM_MAP.keys()):
-            # Convert to relative path if root_dir is not "."
-            if root_dir != "." and dirpath.startswith(root_dir):
-                rel_path = os.path.relpath(dirpath, os.getcwd())
-                directories_with_deps.add(rel_path)
-            else:
-                directories_with_deps.add(dirpath)
+            directories_with_deps.add(dirpath)
 
     return list(directories_with_deps)
 
 
-def generate_dependabot_config(directories: list[str], interval: str) -> str:
+def generate_dependabot_config(directories: list[Path], interval: str) -> str:
     """
     Generate dependabot.yml configuration based on detected project types
     """
@@ -100,7 +103,7 @@ def generate_dependabot_config(directories: list[str], interval: str) -> str:
         for ecosystem in ecosystems:
             if ecosystem not in ecosystem_dirs:
                 ecosystem_dirs[ecosystem] = []
-            ecosystem_dirs[ecosystem].append(directory)
+            ecosystem_dirs[ecosystem].append(str(directory))
 
     # Build dependabot.yml content
     config = f"""version: 2
@@ -143,16 +146,16 @@ updates:
     return config
 
 
-def main(scan_path: str, interval: str, output_path: str) -> int:
+def main(scan_path: Path, interval: str, output_path: Path, ignore_dirs: list[str]) -> int:
     """
     Main function to generate dependabot.yml configuration.
     """
-    logging.info(f"Starting dependabot generation with scan_path: {scan_path}, interval: {interval}, output_path: {output_path}")
+    logging.info(f"Starting dependabot generation with scan_path: '{scan_path}', interval: '{interval}', output_path: '{output_path}', ignore_dirs: {ignore_dirs}")
 
     # Process directories based on input method
-    logging.info(f"Scanning for directories with dependency files in {scan_path}")
-    dirs = recursively_scan_directories(root_dir=scan_path)
-    logging.info(f"Found {len(dirs)} directories with dependency files: {dirs}")
+    logging.info(f"Scanning for directories with dependency files in '{scan_path}'")
+    dirs = recursively_scan_directories(root_dir=scan_path, ignore_dirs=ignore_dirs)
+    logging.info(f"Found {len(dirs)} directories with dependency files: {[str(d) for d in dirs]}")
 
     # Generate dependabot configuration
     logging.info("Generating dependabot configuration")
@@ -162,17 +165,16 @@ def main(scan_path: str, interval: str, output_path: str) -> int:
     )
 
     # Create output directory if it doesn't exist
-    output_dir = os.path.dirname(output_path)
-    if not os.path.exists(output_dir):
-        logging.info(f"Creating output directory {output_dir}")
-        os.makedirs(output_dir)
+    output_dir = output_path.parent
+    if not output_dir.exists():
+        logging.info(f"Creating output directory '{output_dir}'")
+        output_dir.mkdir(parents=True)
 
     # Write configuration to file
-    logging.info(f"Writing dependabot configuration to {output_path}")
-    with open(output_path, "w") as f:
-        _ = f.write(config_content)
+    logging.info(f"Writing dependabot configuration to '{output_path}'")
+    output_path.write_text(config_content)
 
-    logging.info(f"Dependabot configuration generated at {output_path}")
+    logging.info(f"Dependabot configuration generated at '{output_path}'")
     return 0
 
 
@@ -207,9 +209,18 @@ if __name__ == "__main__":
         default=".github/dependabot.yml",
     )
 
+    _ = parser.add_argument(
+        "--ignore-dirs",
+        help="Comma-separated list of directories to ignore.",
+        type=str,
+        default="",
+    )
+
     args: argparse.Namespace = parser.parse_args()
+    ignore_dirs = [d.strip() for d in args.ignore_dirs.split(',') if d.strip()]
     sys.exit(main(
-        scan_path=str(args.scan_path),
+        scan_path=Path(args.scan_path),
         interval=str(args.interval),
-        output_path=str(args.output_filepath),
+        output_path=Path(args.output_filepath),
+        ignore_dirs=ignore_dirs,
     ))
