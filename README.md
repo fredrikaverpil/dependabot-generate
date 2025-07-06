@@ -47,7 +47,7 @@ jobs:
           commit-message: "chore(dependabot): generate dependabot.yml"
           title: "chore(dependabot): generate dependabot.yml"
           body: "This PR adds the generated dependabot.yml file."
-          branch: "chore/dependabot"
+          branch: "chore/dependabot-generate"
           delete-branch: true
 ```
 
