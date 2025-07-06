@@ -1,0 +1,23 @@
+name: 'Generate Dependabot Config'
+description: 'Generates a dependabot.yml file based on the detected package ecosystems in the repository.'
+inputs:
+  scan-path:
+    description: 'The path to scan for dependency files.'
+    required: false
+    default: '.'
+  interval:
+    description: 'The update interval for dependencies.'
+    required: false
+    default: 'weekly'
+  runs:
+  using: "composite"
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+    - name: Generate dependabot.yml
+      id: generate
+      shell: bash
+      run: |
+        python ${{ github.action_path }}/generate.py --scan-path ${{ inputs.scan-path }} --interval ${{ inputs.interval }}
