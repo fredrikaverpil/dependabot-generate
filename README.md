@@ -7,6 +7,14 @@ Using
 [`peter-evans/crate-pull-request`](https://github.com/peter-evans/create-pull-request),
 you can have a PR created once the `dependabot.yml` changes.
 
+## Features
+
+The action comes with some sane defaults, like:
+
+- Grouping of directories, for the same eco-system.
+- Grouping of minor and patch level version bumping.
+- A label `dependencies` is added to dependabot PRs.
+
 ## Setup
 
 Place this workflow in e.g. `.github/workflows/dependabot-generate.yml`.
@@ -44,6 +52,8 @@ jobs:
 ```
 
 ## Inputs
+
+You can customize the following inputs.
 
 | Input       | Description                            | Default  | Required |
 | ----------- | -------------------------------------- | -------- | -------- |
