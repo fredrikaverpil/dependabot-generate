@@ -19,7 +19,12 @@ func run() error {
 	customMapJSON := flag.String("custom-map", "", "JSON string to extend the default ecosystem map")
 	flag.Parse()
 
-	log.Printf("Starting dependabot generation with scan_path: '%s', interval: '%s', output_path: '%s'", *scanPath, *interval, *outputFilepath)
+	log.Printf(
+		"Starting dependabot generation with scan_path: '%s', interval: '%s', output_path: '%s'",
+		*scanPath,
+		*interval,
+		*outputFilepath,
+	)
 
 	var ignoreDirs []string
 	if *ignoreDirsStr != "" {
@@ -48,12 +53,12 @@ func run() error {
 	}
 
 	outputDir := filepath.Dir(*outputFilepath)
-	if err := os.MkdirAll(outputDir, 0755); err != nil {
+	if err := os.MkdirAll(outputDir, 0o755); err != nil {
 		return fmt.Errorf("error creating output directory '%s': %w", outputDir, err)
 	}
 
 	log.Printf("Writing dependabot configuration to '%s'", *outputFilepath)
-	if err := os.WriteFile(*outputFilepath, []byte(configContent), 0644); err != nil {
+	if err := os.WriteFile(*outputFilepath, []byte(configContent), 0o644); err != nil {
 		return fmt.Errorf("error writing output file: %w", err)
 	}
 

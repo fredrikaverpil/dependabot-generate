@@ -131,7 +131,6 @@ func RecursivelyScanDirectories(root string, ignoreDirs []string, ecosystemMap [
 		}
 		return nil
 	})
-
 	if err != nil {
 		return nil, fmt.Errorf("error walking directories: %w", err)
 	}

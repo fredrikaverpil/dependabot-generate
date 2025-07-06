@@ -21,8 +21,7 @@ type EcosystemMapEntry struct {
 
 // --- Default Ecosystem Map ---
 
-var (
-	defaultEcosystemMapJSON = `[
+var defaultEcosystemMapJSON = `[
 		{
 			"ecosystem": "uv",
 			"heuristics": [
@@ -56,7 +55,6 @@ var (
 		{"ecosystem": "devcontainers", "patterns": ["devcontainer.json"]},
 		{"ecosystem": "gitsubmodule", "patterns": [".gitmodules"]}
 	]`
-)
 
 // --- Core Logic ---
 
