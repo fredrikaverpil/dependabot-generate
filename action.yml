@@ -12,7 +12,7 @@ inputs:
   ignore-dirs:
     description: 'A comma-separated string of relative paths to ignore.'
     required: false
-    default: '.venv,node_modules'
+    default: ''
   custom-map:
     description: 'JSON string to extend the default ecosystem map.'
     required: false
@@ -20,12 +20,17 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Set up Python
-      uses: actions/setup-python@v5
+    - name: Set up Go
+      uses: actions/setup-go@v5
       with:
-        python-version: '3.x'
+        go-version: '1.24'
+        cache: false
     - name: Generate dependabot.yml
       id: generate
       shell: bash
       run: |
-        python ${{ github.action_path }}/generate.py --scan-path ${{ inputs.scan-path }} --interval ${{ inputs.interval }} --ignore-dirs ${{ inputs.ignore-dirs }} --custom-map '${{ inputs.custom-map }}'
+        go run ${{ github.action_path }}/cmd/dependabot-generate \
+          --scan-path "${{ inputs.scan-path }}" \
+          --interval "${{ inputs.interval }}" \
+          --ignore-dirs "${{ inputs.ignore-dirs }}" \
+          --custom-map '${{ inputs.custom-map }}'

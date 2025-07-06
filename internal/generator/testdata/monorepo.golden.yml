@@ -3,7 +3,7 @@ updates:
   - package-ecosystem: "github-actions"
     directories: ["/", ".github/actions/*/*.yml", ".github/actions/*/*.yaml", "action.yml", "action.yaml", "actions/*/*.yml", "actions/*/*.yaml"]
     schedule:
-      interval: "weekly"
+      interval: "daily"
     groups:
       github-actions:
         patterns: ["*"]
@@ -11,10 +11,21 @@ updates:
     labels:
       - "dependencies"
 
-  - package-ecosystem: "gomod"
-    directories: ["/"]
+  - package-ecosystem: "docker"
+    directories: ["."]
     schedule:
-      interval: "weekly"
+      interval: "daily"
+    groups:
+      docker:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+    labels:
+      - "dependencies"
+
+  - package-ecosystem: "gomod"
+    directories: [".", "yolo"]
+    schedule:
+      interval: "daily"
     groups:
       gomod:
         patterns: ["*"]

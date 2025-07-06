@@ -21,3 +21,14 @@ updates:
         update-types: ["minor", "patch"]
     labels:
       - "dependencies"
+
+  - package-ecosystem: "uv"
+    directories: ["project-a"]
+    schedule:
+      interval: "weekly"
+    groups:
+      uv:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+    labels:
+      - "dependencies"

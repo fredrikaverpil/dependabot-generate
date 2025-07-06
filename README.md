@@ -3,9 +3,18 @@
 This action generates the `dependabot.yml` file based on the detected package
 ecosystems in the repository.
 
-Using
-[`peter-evans/crate-pull-request`](https://github.com/peter-evans/create-pull-request),
-you can have a PR created once the `dependabot.yml` changes.
+## On-Demand Usage
+
+You can run this tool directly from its GitHub repository without a local clone.
+This is useful for one-off generation or for trying out the tool.
+
+```bash
+go run github.com/fredrikaverpil/dependabot-generate/cmd/dependabot-generate@latest
+```
+
+This will generate a `.github/dependabot.yml` file in your current directory.
+
+---
 
 ## Features
 
@@ -26,6 +35,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
   schedule:
     - cron: "0 9 * * 1"
 
@@ -55,28 +65,41 @@ jobs:
 
 You can customize the following inputs.
 
-| Input       | Description                            | Default  | Required |
-| ----------- | -------------------------------------- | -------- | -------- |
-| `scan-path` | The path to scan for dependency files. | `.`      | No       |
-| `interval`  | The update interval for dependencies.  | `weekly` | No       |
-| `ignore-dirs` | A comma-separated string of relative paths to ignore. | `''` | No |
-| `custom-map` | JSON string to extend the default ecosystem map. | `''` | No |
+| Input         | Description                                           | Default  | Required |
+| ------------- | ----------------------------------------------------- | -------- | -------- |
+| `scan-path`   | The path to scan for dependency files.                | `.`      | No       |
+| `interval`    | The update interval for dependencies.                 | `weekly` | No       |
+| `ignore-dirs` | A comma-separated string of relative paths to ignore. | `''`     | No       |
+| `custom-map`  | JSON string to extend the default ecosystem map.      | `''`     | No       |
 
 ### Custom Ecosystem Map
 
-You can extend and override the default ecosystem detection by providing a custom map. This is useful for proprietary package managers or for resolving conflicts between tools that use the same file names (like `pyproject.toml`).
+You can extend and override the default ecosystem detection by providing a
+custom map. This is really only useful when resolving conflicts between
+ecosystems that use the same file names for detection.
 
-The action uses a "first match wins" strategy. Your custom rules are checked first, giving them the highest priority.
+The action uses a "first match wins" strategy. Your custom rules are checked
+first, giving them the highest priority.
 
-The input must be a JSON string. Each entry can define an ecosystem using simple `patterns` (glob support) or more advanced `heuristics`.
+The input must be a JSON string. Each entry can define an ecosystem using simple
+`patterns` (glob support) or more advanced `heuristics`.
 
 **Heuristic Rules:**
+
 - `present`: A list of glob patterns that must all be found in a directory.
-- `absent`: An optional list of glob patterns that must *not* be found.
+- `absent`: An optional list of glob patterns that must _not_ be found.
 
 **Example:**
 
-This example adds a new rule for a custom build system and overrides the default `pip` behavior to prefer a `requirements.in` file.
+This example shows how to resolve a conflict between `uv` and `pip`, which both
+use `pyproject.toml`. The rules are evaluated in order. The first rule that
+matches wins, preventing the second rule from being evaluated.
+
+- The first rule checks for a `uv.lock` file. If found, the directory is
+  correctly identified as a `uv` project.
+- Only if the first rule does _not_ match will the second rule be evaluated. It
+  looks for a `pyproject.toml` but _only_ if a `uv.lock` is absent, correctly
+  identifying it as a `pip` project.
 
 ```yaml
 - name: Generate Dependabot Config
@@ -85,16 +108,57 @@ This example adds a new rule for a custom build system and overrides the default
     custom-map: |
       [
         {
-          "ecosystem": "my-custom-build",
-          "patterns": ["build.special", "*.custom"]
+          "ecosystem": "uv",
+          "heuristics": [
+            {
+              "present": ["uv.lock", "pyproject.toml"]
+            }
+          ]
         },
         {
           "ecosystem": "pip",
           "heuristics": [
             {
-              "present": ["requirements.in"]
+              "present": ["pyproject.toml"],
+              "absent": ["uv.lock"]
             }
           ]
         }
       ]
+```
+
+A list of package managers and which ecosystem should be used for each can be
+seen in
+[the dependabot docs](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#package-ecosystem-).
+
+> [!NOTE]
+>
+> The example is taken from how `dependabot-generate` works out of the box, so
+> you don't have to take this into consideration. This is just using a concrete
+> and realistic example to explain how the heuristics engine works.
+
+## Local Development
+
+You can run the generator locally for testing purposes using `go run`. This
+allows you to see the generated `dependabot.yml` without running the full GitHub
+Action.
+
+**Basic command:**
+
+```bash
+go run ./cmd/dependabot-generate
+```
+
+**With custom arguments:**
+
+```bash
+go run ./cmd/dependabot-generate --scan-path="/path/to/your/project" --interval="daily"
+```
+
+### Releasing
+
+Move tag forward to latest commit:
+
+```sh
+git tag -f v1 && git push origin v1 -f
 ```
