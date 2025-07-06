@@ -143,7 +143,45 @@ updates:
     return config
 
 
-def main() -> int:
+def main(scan_path: str, interval: str, output_path: str) -> int:
+    """
+    Main function to generate dependabot.yml configuration.
+    """
+    logging.info(f"Starting dependabot generation with scan_path: {scan_path}, interval: {interval}, output_path: {output_path}")
+
+    # Process directories based on input method
+    logging.info(f"Scanning for directories with dependency files in {scan_path}")
+    dirs = recursively_scan_directories(root_dir=scan_path)
+    logging.info(f"Found {len(dirs)} directories with dependency files: {dirs}")
+
+    # Generate dependabot configuration
+    logging.info("Generating dependabot configuration")
+    config_content = generate_dependabot_config(
+        directories=dirs,
+        interval=interval,
+    )
+
+    # Create output directory if it doesn't exist
+    output_dir = os.path.dirname(output_path)
+    if not os.path.exists(output_dir):
+        logging.info(f"Creating output directory {output_dir}")
+        os.makedirs(output_dir)
+
+    # Write configuration to file
+    logging.info(f"Writing dependabot configuration to {output_path}")
+    with open(output_path, "w") as f:
+        _ = f.write(config_content)
+
+    logging.info(f"Dependabot configuration generated at {output_path}")
+    return 0
+
+
+if __name__ == "__main__":
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        stream=sys.stdout,
+    )
     parser = argparse.ArgumentParser(
         description="Generate dependabot.yml configuration"
     )
@@ -170,34 +208,8 @@ def main() -> int:
     )
 
     args: argparse.Namespace = parser.parse_args()
-    scan_path = str(args.scan_path)
-    interval = str(args.interval)
-    output_path = str(args.output_filepath)
-
-    # Process directories based on input method
-    dirs = recursively_scan_directories(root_dir=scan_path)
-
-    # Generate dependabot configuration
-    config_content = generate_dependabot_config(
-        directories=dirs,
-        interval=interval,
-    )
-
-    # Create output directory if it doesn't exist
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-
-    # Write configuration to file
-    with open(output_path, "w") as f:
-        _ = f.write(config_content)
-
-    logging.info(f"Dependabot configuration generated at {output_path}")
-    return 0
-
-
-if __name__ == "__main__":
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s - %(levelname)s - %(message)s",
-        stream=sys.stdout,
-    )
-    sys.exit(main())
+    sys.exit(main(
+        scan_path=str(args.scan_path),
+        interval=str(args.interval),
+        output_path=str(args.output_filepath),
+    ))
