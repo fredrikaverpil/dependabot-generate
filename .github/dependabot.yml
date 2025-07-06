@@ -1,11 +1,22 @@
 version: 2
 updates:
   - package-ecosystem: "github-actions"
-    directories: ["/", ".github/actions/*/*.yml", ".github/actions/*/*.yaml", "action.yml", "action.yaml", "actions/*/*.yml", "actions/*/*.yaml"]
+    directory: "/"
     schedule:
       interval: "weekly"
     groups:
       github-actions:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+    labels:
+      - "dependencies"
+
+  - package-ecosystem: "uv"
+    directories: ["/"]
+    schedule:
+      interval: "weekly"
+    groups:
+      uv:
         patterns: ["*"]
         update-types: ["minor", "patch"]
     labels:

@@ -12,6 +12,10 @@ inputs:
   ignore-dirs:
     description: 'A comma-separated string of relative paths to ignore.'
     required: false
+    default: '.venv,node_modules'
+  custom-map:
+    description: 'JSON string to extend the default ecosystem map.'
+    required: false
     default: ''
 runs:
   using: "composite"
@@ -24,4 +28,4 @@ runs:
       id: generate
       shell: bash
       run: |
-        python ${{ github.action_path }}/generate.py --scan-path ${{ inputs.scan-path }} --interval ${{ inputs.interval }} --ignore-dirs ${{ inputs.ignore-dirs }}
+        python ${{ github.action_path }}/generate.py --scan-path ${{ inputs.scan-path }} --interval ${{ inputs.interval }} --ignore-dirs ${{ inputs.ignore-dirs }} --custom-map '${{ inputs.custom-map }}'

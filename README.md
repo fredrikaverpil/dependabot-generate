@@ -60,3 +60,41 @@ You can customize the following inputs.
 | `scan-path` | The path to scan for dependency files. | `.`      | No       |
 | `interval`  | The update interval for dependencies.  | `weekly` | No       |
 | `ignore-dirs` | A comma-separated string of relative paths to ignore. | `''` | No |
+| `custom-map` | JSON string to extend the default ecosystem map. | `''` | No |
+
+### Custom Ecosystem Map
+
+You can extend and override the default ecosystem detection by providing a custom map. This is useful for proprietary package managers or for resolving conflicts between tools that use the same file names (like `pyproject.toml`).
+
+The action uses a "first match wins" strategy. Your custom rules are checked first, giving them the highest priority.
+
+The input must be a JSON string. Each entry can define an ecosystem using simple `patterns` (glob support) or more advanced `heuristics`.
+
+**Heuristic Rules:**
+- `present`: A list of glob patterns that must all be found in a directory.
+- `absent`: An optional list of glob patterns that must *not* be found.
+
+**Example:**
+
+This example adds a new rule for a custom build system and overrides the default `pip` behavior to prefer a `requirements.in` file.
+
+```yaml
+- name: Generate Dependabot Config
+  uses: fredrikaverpil/dependabot-generate@v1
+  with:
+    custom-map: |
+      [
+        {
+          "ecosystem": "my-custom-build",
+          "patterns": ["build.special", "*.custom"]
+        },
+        {
+          "ecosystem": "pip",
+          "heuristics": [
+            {
+              "present": ["requirements.in"]
+            }
+          ]
+        }
+      ]
+```

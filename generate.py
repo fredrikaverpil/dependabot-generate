@@ -1,115 +1,188 @@
 import argparse
+import fnmatch
+import json
 import logging
 import sys
 from pathlib import Path
+from typing import TypedDict, cast
+
+# --- Type Definitions ---
 
 
+class Heuristic(TypedDict, total=False):
+    """A rule for detecting an ecosystem."""
 
-# Map of file indicators to ecosystems.
-# https://docs.github.com/en/code-security/dependabot/ecosystems-supported-by-dependabot/supported-ecosystems-and-repositories
-FILE_ECOSYSTEM_MAP: dict[str, str] = {
-    # Python ecosystem detection
-    "uv.lock": "uv",
-    # Go ecosystem detection
-    "go.mod": "gomod",  # Only need go.mod, not go.sum
-    # Node ecosystem detection
-    "package.json": "npm",  # Primary specification file
-    # Docker ecosystem detection
-    "Dockerfile": "docker",
-    "docker-compose.yml": "docker-compose",
-    "docker-compose.yaml": "docker-compose",
-    # Ruby ecosystem detection
-    "Gemfile": "bundler",
-    # PHP ecosystem detection
-    "composer.json": "composer",
-    # Rust ecosystem detection
-    "Cargo.toml": "cargo",  # Only need Cargo.toml, not Cargo.lock
-    # .NET ecosystem detection
-    "packages.config": "nuget",
-    "global.json": "dotnet-sdk",
-    "Directory.Packages.props": "nuget",
-    # Elixir ecosystem detection
-    "mix.exs": "mix",
-    # Elm ecosystem detection
-    "elm.json": "elm",
-    # Gradle ecosystem detection
-    "build.gradle": "gradle",
-    "build.gradle.kts": "gradle",
-    # Maven ecosystem detection
-    "pom.xml": "maven",
-    # Dart/Flutter ecosystem detection
-    "pubspec.yaml": "pub",
-    # Swift ecosystem detection
-    "Package.swift": "swift",
-    # Terraform ecosystem detection
-    "main.tf": "terraform",
-    # Dev containers detection
-    "devcontainer.json": "devcontainers",
-    ".devcontainer.json": "devcontainers",
-    # Git submodule detection
-    ".gitmodules": "gitsubmodule",
-}
+    present: list[str]  # Glob patterns that must be present
+    absent: list[str]  # Glob patterns that must be absent
 
 
-def detect_package_ecosystems(directory: Path) -> list[str]:
+class SimpleEcosystem(TypedDict):
+    """A simple ecosystem definition using basic patterns."""
+
+    ecosystem: str
+    patterns: list[str]
+
+
+class HeuristicEcosystem(TypedDict):
+    """An ecosystem definition using advanced heuristics."""
+
+    ecosystem: str
+    heuristics: list[Heuristic]
+
+
+EcosystemMap = SimpleEcosystem | HeuristicEcosystem
+
+DEFAULT_ECOSYSTEM_MAP: list[EcosystemMap] = [
+    HeuristicEcosystem(
+        ecosystem="uv",
+        heuristics=[
+            {"present": ["uv.lock"]},
+        ],
+    ),
+    HeuristicEcosystem(
+        ecosystem="pip",
+        heuristics=[
+            {"present": ["poetry.lock", "pyproject.toml"]},
+            {"present": ["Pipfile.lock"]},
+            {"present": ["Pipfile"]},
+            {"present": ["requirements.txt"]},
+            {"present": ["requirements.in"]},
+            {"present": ["pyproject.toml"], "absent": ["uv.lock"]},
+        ],
+    ),
+    SimpleEcosystem(ecosystem="gomod", patterns=["go.mod"]),
+    SimpleEcosystem(ecosystem="npm", patterns=["package.json"]),
+    SimpleEcosystem(ecosystem="docker", patterns=["Dockerfile"]),
+    SimpleEcosystem(ecosystem="bundler", patterns=["Gemfile"]),
+    SimpleEcosystem(ecosystem="composer", patterns=["composer.json"]),
+    SimpleEcosystem(ecosystem="cargo", patterns=["Cargo.toml"]),
+    SimpleEcosystem(ecosystem="nuget", patterns=["*.csproj", "packages.config"]),
+    SimpleEcosystem(ecosystem="mix", patterns=["mix.exs"]),
+    SimpleEcosystem(ecosystem="elm", patterns=["elm.json"]),
+    SimpleEcosystem(ecosystem="gradle", patterns=["build.gradle", "build.gradle.kts"]),
+    SimpleEcosystem(ecosystem="maven", patterns=["pom.xml"]),
+    SimpleEcosystem(ecosystem="pub", patterns=["pubspec.yaml"]),
+    SimpleEcosystem(ecosystem="swift", patterns=["Package.swift"]),
+    SimpleEcosystem(ecosystem="terraform", patterns=["*.tf", "*.tf.json"]),
+    SimpleEcosystem(ecosystem="devcontainers", patterns=["devcontainer.json"]),
+    SimpleEcosystem(ecosystem="gitsubmodule", patterns=[".gitmodules"]),
+]
+
+
+def get_ecosystem_map(custom_map_json: str) -> list[EcosystemMap]:
     """
-    Detect all package ecosystems in a directory.
-    Returns a list of detected ecosystem names.
+    Merges the default ecosystem map with a user-provided custom map.
+    User-provided rules are given higher precedence.
     """
-    # Set to track unique ecosystems
+    if not custom_map_json:
+        return DEFAULT_ECOSYSTEM_MAP
+    try:
+        custom_map = cast(list[EcosystemMap], json.loads(custom_map_json))
+        logging.info(
+            "Successfully parsed custom ecosystem map, prepending to defaults: %s",
+            custom_map,
+        )
+        return custom_map + DEFAULT_ECOSYSTEM_MAP
+    except json.JSONDecodeError:
+        logging.error("Failed to parse custom-map JSON. Using default map only.")
+        return DEFAULT_ECOSYSTEM_MAP
+
+
+def detect_package_ecosystems(
+    directory: Path, ecosystem_map: list[EcosystemMap]
+) -> list[str]:
+    """
+    Detect all package ecosystems in a directory based on the provided ecosystem map.
+    """
     found_ecosystems: set[str] = set()
+    try:
+        files_in_dir = [f.name for f in directory.iterdir() if f.is_file()]
+    except FileNotFoundError:
+        logging.warning(f"Directory not found, cannot detect ecosystems: {directory}")
+        return []
 
-    # Check for each file type
-    for filename, ecosystem in FILE_ECOSYSTEM_MAP.items():
-        if (directory / filename).exists():
-            found_ecosystems.add(ecosystem)
-            logging.info(
-                f"Detected {ecosystem} ecosystem in {directory} via {filename}"
-            )
+    for entry in ecosystem_map:
+        if "heuristics" in entry:
+            heuristic_entry = cast(HeuristicEcosystem, entry)  # pyright: ignore[reportUnnecessaryCast]
+            ecosystem = heuristic_entry["ecosystem"]
+            # Advanced heuristic-based matching
+            for rule in heuristic_entry["heuristics"]:
+                present_patterns = rule.get("present", [])
+                absent_patterns = rule.get("absent", [])
 
+                present_match = all(
+                    any(fnmatch.fnmatch(f, p) for f in files_in_dir)
+                    for p in present_patterns
+                )
+                absent_match = not any(
+                    any(fnmatch.fnmatch(f, p) for f in files_in_dir)
+                    for p in absent_patterns
+                )
+
+                if present_match and absent_match:
+                    logging.info(
+                        f"Detected {ecosystem} in {directory} via heuristic: {rule}"
+                    )
+                    found_ecosystems.add(ecosystem)
+        elif "patterns" in entry:
+            ecosystem = entry["ecosystem"]
+            # Simple pattern matching
+            for pattern in entry["patterns"]:
+                if any(fnmatch.fnmatch(f, pattern) for f in files_in_dir):
+                    logging.info(
+                        f"Detected {ecosystem} in {directory} via pattern '{pattern}'"
+                    )
+                    found_ecosystems.add(ecosystem)
     return list(found_ecosystems)
 
 
-def recursively_scan_directories(root_dir: Path, ignore_dirs: list[str]) -> list[Path]:
+def recursively_scan_directories(
+    root_dir: Path, ignore_dirs: list[str], ecosystem_map: list[EcosystemMap]
+) -> list[Path]:
     """
-    Recursively scan directories for dependency files and return directories
-    that contain at least one dependency file.
+    Recursively scan for directories that contain at least one dependency file.
     """
     directories_with_deps: set[Path] = set()
     ignored_dirs_set = set(ignore_dirs)
 
-    for dirpath_str, _, filenames in root_dir.walk():
-        dirpath = Path(dirpath_str)
-        # Skip ignored directories
-        if any(ignored_dir in str(dirpath) for ignored_dir in ignored_dirs_set):
-            logging.info(f"Skipping ignored directory: {dirpath}")
+    # Combine root_dir with all its subdirectories for a complete scan
+    all_dirs_to_scan = [root_dir] + list(root_dir.rglob("*"))
+
+    for item in all_dirs_to_scan:
+        if not item.is_dir():
             continue
 
-        if any(indicator in filenames for indicator in FILE_ECOSYSTEM_MAP.keys()):
+        dirpath = item
+        if dirpath in directories_with_deps:
+            continue  # Already processed
+
+        if any(ignored_dir in str(dirpath) for ignored_dir in ignored_dirs_set):
+            continue
+
+        if detect_package_ecosystems(dirpath, ecosystem_map):
             directories_with_deps.add(dirpath)
 
-    return list(directories_with_deps)
+    return sorted(list(directories_with_deps))
 
 
-def generate_dependabot_config(directories: list[Path], interval: str) -> str:
+def generate_dependabot_config(
+    directories: list[Path], interval: str, ecosystem_map: list[EcosystemMap]
+) -> str:
     """
-    Generate dependabot.yml configuration based on detected project types
+    Generate dependabot.yml configuration based on detected project types.
     """
-
-    # Map directories to ecosystems
     ecosystem_dirs: dict[str, list[str]] = {}
     for directory in directories:
-        ecosystems = detect_package_ecosystems(directory)
-        for ecosystem in ecosystems:
+        detected_ecosystems = detect_package_ecosystems(directory, ecosystem_map)
+        for ecosystem in detected_ecosystems:
             if ecosystem not in ecosystem_dirs:
                 ecosystem_dirs[ecosystem] = []
             ecosystem_dirs[ecosystem].append(str(directory))
 
-    # Build dependabot.yml content
     config = f"""version: 2
 updates:
   - package-ecosystem: "github-actions"
-    directories: ["/", ".github/actions/*/*.yml", ".github/actions/*/*.yaml", "action.yml", "action.yaml", "actions/*/*.yml", "actions/*/*.yaml"]
+    directory: "/"
     schedule:
       interval: "{interval}"
     groups:
@@ -120,16 +193,11 @@ updates:
       - "dependencies"
 """
 
-    # Add ecosystem-specific configurations
-    for ecosystem, dirs in ecosystem_dirs.items():
-        if dirs == ["tools"]:
-            # TODO: skip this for now, figure out later.
-            # This should be its own entry, separate from production dependencies.
-            continue
-
-        if "tools" in dirs:
-            dirs.remove("tools")  # do not mix dev tooling into production dependencies
-        dir_entries = '["' + '", "'.join(dirs) + '"]'
+    for ecosystem, dirs in sorted(ecosystem_dirs.items()):
+        unique_dirs = sorted(list(set(dirs)))
+        dir_entries = (
+            '["' + '", "'.join(d if d != "." else "/" for d in unique_dirs) + '"]'
+        )
         config += f"""
   - package-ecosystem: "{ecosystem}"
     directories: {dir_entries}
@@ -142,37 +210,52 @@ updates:
     labels:
       - "dependencies"
 """
-
     return config
 
 
-def main(scan_path: Path, interval: str, output_path: Path, ignore_dirs: list[str]) -> int:
+def main(
+    scan_path: Path,
+    interval: str,
+    output_path: Path,
+    ignore_dirs: list[str],
+    custom_map_json: str,
+) -> int:
     """
     Main function to generate dependabot.yml configuration.
     """
-    logging.info(f"Starting dependabot generation with scan_path: '{scan_path}', interval: '{interval}', output_path: '{output_path}', ignore_dirs: {ignore_dirs}")
-
-    # Process directories based on input method
-    logging.info(f"Scanning for directories with dependency files in '{scan_path}'")
-    dirs = recursively_scan_directories(root_dir=scan_path, ignore_dirs=ignore_dirs)
-    logging.info(f"Found {len(dirs)} directories with dependency files: {[str(d) for d in dirs]}")
-
-    # Generate dependabot configuration
-    logging.info("Generating dependabot configuration")
-    config_content = generate_dependabot_config(
-        directories=dirs,
-        interval=interval,
+    logging.info(
+        (
+            "Starting dependabot generation with scan_path: '%s', interval: '%s', "
+            "output_path: '%s', ignore_dirs: %s"
+        ),
+        scan_path,
+        interval,
+        output_path,
+        ignore_dirs,
     )
 
-    # Create output directory if it doesn't exist
+    ecosystem_map = get_ecosystem_map(custom_map_json)
+
+    logging.info(f"Scanning for directories with dependency files in '{scan_path}'")
+    dirs = recursively_scan_directories(
+        root_dir=scan_path, ignore_dirs=ignore_dirs, ecosystem_map=ecosystem_map
+    )
+    logging.info(
+        f"Found {len(dirs)} directories with dependency files: {[str(d) for d in dirs]}"
+    )
+
+    logging.info("Generating dependabot configuration")
+    config_content = generate_dependabot_config(
+        directories=dirs, interval=interval, ecosystem_map=ecosystem_map
+    )
+
     output_dir = output_path.parent
     if not output_dir.exists():
         logging.info(f"Creating output directory '{output_dir}'")
-        output_dir.mkdir(parents=True)
+        output_dir.mkdir(parents=True, exist_ok=True)
 
-    # Write configuration to file
     logging.info(f"Writing dependabot configuration to '{output_path}'")
-    output_path.write_text(config_content)
+    _ = output_path.write_text(config_content)
 
     logging.info(f"Dependabot configuration generated at '{output_path}'")
     return 0
@@ -184,43 +267,51 @@ if __name__ == "__main__":
         format="%(asctime)s - %(levelname)s - %(message)s",
         stream=sys.stdout,
     )
-    parser = argparse.ArgumentParser(
-        description="Generate dependabot.yml configuration"
-    )
 
+    parser = argparse.ArgumentParser(
+        description="Generate dependabot.yml configuration."
+    )
     _ = parser.add_argument(
         "--scan-path",
-        help="Recursively scan this path for dependency files (default: .)",
         type=str,
         default=".",
+        help="Recursively scan this path for dependency files (default: .)",
     )
-
     _ = parser.add_argument(
         "--interval",
-        help="Update interval for dependencies (default: weekly)",
         type=str,
         default="weekly",
+        help="Update interval for dependencies (default: weekly)",
     )
-
     _ = parser.add_argument(
         "--output-filepath",
-        help="Output file path (default: .github/dependabot.yml)",
         type=str,
         default=".github/dependabot.yml",
+        help="Output file path (default: .github/dependabot.yml)",
     )
-
     _ = parser.add_argument(
         "--ignore-dirs",
-        help="Comma-separated list of directories to ignore.",
+        type=str,
+        default=".venv,node_modules",
+        help="Comma-separated string of relative paths to ignore.",
+    )
+    _ = parser.add_argument(
+        "--custom-map",
         type=str,
         default="",
+        help="JSON string to extend the default ecosystem map.",
     )
 
-    args: argparse.Namespace = parser.parse_args()
-    ignore_dirs = [d.strip() for d in args.ignore_dirs.split(',') if d.strip()]
-    sys.exit(main(
-        scan_path=Path(args.scan_path),
-        interval=str(args.interval),
-        output_path=Path(args.output_filepath),
-        ignore_dirs=ignore_dirs,
-    ))
+    args = parser.parse_args()
+    ignore_dirs_str = cast(str, args.ignore_dirs)
+    ignore_dirs = [d.strip() for d in ignore_dirs_str.split(",") if d.strip()]
+
+    sys.exit(
+        main(
+            scan_path=Path(cast(str, args.scan_path)),
+            interval=cast(str, args.interval),
+            output_path=Path(cast(str, args.output_filepath)),
+            ignore_dirs=ignore_dirs,
+            custom_map_json=cast(str, args.custom_map),
+        )
+    )
