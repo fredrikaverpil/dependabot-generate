@@ -22,7 +22,7 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.SYNC_TOKEN }}
           commit-message: "chore(dependabot): generate dependabot.yml"
           title: "chore(dependabot): generate dependabot.yml"
           body: "This PR adds the generated dependabot.yml file."

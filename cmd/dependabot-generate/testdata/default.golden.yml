@@ -15,6 +15,8 @@ updates:
     directories: ["/"]
     schedule:
       interval: "weekly"
+    allow:
+      - dependency-type: all
     groups:
       gomod:
         patterns: ["*"]
@@ -26,6 +28,8 @@ updates:
     directories: ["project-a"]
     schedule:
       interval: "weekly"
+    allow:
+      - dependency-type: all
     groups:
       uv:
         patterns: ["*"]

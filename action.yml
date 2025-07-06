@@ -18,19 +18,10 @@ inputs:
     required: false
     default: ''
 runs:
-  using: "composite"
-  steps:
-    - name: Set up Go
-      uses: actions/setup-go@v5
-      with:
-        go-version: '1.24'
-        cache: false
-    - name: Generate dependabot.yml
-      id: generate
-      shell: bash
-      run: |
-        go run ${{ github.action_path }}/cmd/dependabot-generate \
-          --scan-path "${{ inputs.scan-path }}" \
-          --interval "${{ inputs.interval }}" \
-          --ignore-dirs "${{ inputs.ignore-dirs }}" \
-          --custom-map '${{ inputs.custom-map }}'
+  using: 'docker'
+  image: 'Dockerfile'
+  args:
+    - '--scan-path=${{ inputs.scan-path }}'
+    - '--interval=${{ inputs.interval }}'
+    - '--ignore-dirs=${{ inputs.ignore-dirs }}'
+    - '--custom-map=${{ inputs.custom-map }}'

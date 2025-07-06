@@ -7,7 +7,12 @@ import (
 	"strings"
 )
 
-func GenerateDependabotConfig(scanPath string, directories []string, interval string, ecosystemMap []EcosystemMapEntry) (string, error) {
+func GenerateDependabotConfig(
+	scanPath string,
+	directories []string,
+	interval string,
+	ecosystemMap []EcosystemMapEntry,
+) (string, error) {
 	ecosystemDirs := make(map[string][]string)
 
 	for _, dir := range directories {
@@ -64,6 +69,8 @@ updates:
     directories: ["%s"]
     schedule:
       interval: "%s"
+    allow:
+      - dependency-type: all
     groups:
       %s:
         patterns: ["*"]
