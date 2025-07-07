@@ -12,4 +12,5 @@ on:
 jobs:
   stale:
     uses: fredrikaverpil/github/.github/workflows/stale.yml@main
-    secrets: inherit
+    secrets:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
