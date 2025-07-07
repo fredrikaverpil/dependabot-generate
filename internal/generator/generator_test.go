@@ -1,4 +1,4 @@
-package generator
+package generator_test
 
 import (
 	"os"
@@ -6,6 +6,8 @@ import (
 	"reflect"
 	"sort"
 	"testing"
+
+	"github.com/fredrikaverpil/dependabot-generate/internal/generator"
 )
 
 func TestGetEcosystemMap(t *testing.T) {
@@ -13,7 +15,7 @@ func TestGetEcosystemMap(t *testing.T) {
 	// 1. Test with no custom map
 	t.Run("no custom map", func(t *testing.T) {
 		t.Parallel()
-		defaultMap, err := GetEcosystemMap("")
+		defaultMap, err := generator.GetEcosystemMap("")
 		if err != nil {
 			t.Fatalf("Expected no error, but got %v", err)
 		}
@@ -26,12 +28,12 @@ func TestGetEcosystemMap(t *testing.T) {
 	t.Run("valid custom map", func(t *testing.T) {
 		t.Parallel()
 		customJSON := `[{"ecosystem": "test-eco", "patterns": ["test.file"]}]`
-		mergedMap, err := GetEcosystemMap(customJSON)
+		mergedMap, err := generator.GetEcosystemMap(customJSON)
 		if err != nil {
 			t.Fatalf("Expected no error, but got %v", err)
 		}
 
-		defaultMap, _ := GetEcosystemMap("")
+		defaultMap, _ := generator.GetEcosystemMap("")
 		if len(mergedMap) <= len(defaultMap) {
 			t.Fatal("Expected merged map to be longer than default map")
 		}
@@ -46,7 +48,7 @@ func TestGetEcosystemMap(t *testing.T) {
 	t.Run("malformed custom map", func(t *testing.T) {
 		t.Parallel()
 		malformedJSON := `[{"ecosystem": "test-eco", "patterns": ["test.file"]` // Missing closing bracket
-		_, err := GetEcosystemMap(malformedJSON)
+		_, err := generator.GetEcosystemMap(malformedJSON)
 		if err == nil {
 			t.Fatal("Expected an error for malformed JSON, but got nil")
 		}
@@ -67,7 +69,7 @@ func TestDetectPackageEcosystems(t *testing.T) {
 		return dir
 	}
 
-	ecosystemMap, _ := GetEcosystemMap("") // Use default map for tests
+	ecosystemMap, _ := generator.GetEcosystemMap("") // Use default map for tests
 
 	testCases := []struct {
 		name               string
@@ -105,7 +107,7 @@ func TestDetectPackageEcosystems(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			dir := createTempDirWithFiles(t, tc.files)
-			detected, err := DetectPackageEcosystems(dir, ecosystemMap)
+			detected, err := generator.DetectPackageEcosystems(dir, ecosystemMap)
 			if err != nil {
 				t.Fatalf("Expected no error, but got %v", err)
 			}
@@ -157,7 +159,7 @@ func TestGenerateDependabotConfig(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			ecosystemMap, _ := GetEcosystemMap("")
+			ecosystemMap, _ := generator.GetEcosystemMap("")
 
 			// Create a temporary directory structure for the test
 			rootDir := t.TempDir()
@@ -171,7 +173,7 @@ func TestGenerateDependabotConfig(t *testing.T) {
 				}
 			}
 
-			config, err := GenerateDependabotConfig(rootDir, tc.directories, "daily", ecosystemMap)
+			config, err := generator.GenerateDependabotConfig(rootDir, tc.directories, "daily", ecosystemMap)
 			if err != nil {
 				t.Fatalf("Expected no error, but got %v", err)
 			}
