@@ -22,7 +22,9 @@ This will generate a `.github/dependabot.yml` file in your current directory.
 
 ## Composite Action
 
-Place this workflow in e.g. `.github/workflows/dependabot-generate.yml`.
+Place this workflow in e.g. `.github/workflows/dependabot-generate.yml`, and a
+PR will automatically be opened in your GitHub repository if new lockfiles have
+been added.
 
 ```yaml
 name: Generate Dependabot Config
