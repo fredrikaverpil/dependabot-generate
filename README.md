@@ -8,10 +8,10 @@
 This action generates the `dependabot.yml` file based on the detected package
 ecosystems in the repository.
 
-## On-Demand Usage
+## CLI
 
-You can run this tool directly from its GitHub repository without a local clone.
-This is useful for one-off generation or for trying out the tool.
+You can run this tool directly from your GitHub repository. This is useful for
+one-off generation or for trying out the tool.
 
 ```bash
 go run github.com/fredrikaverpil/dependabot-generate/cmd/dependabot-generate@latest
@@ -21,7 +21,7 @@ This will generate a `.github/dependabot.yml` file in your current directory.
 
 ---
 
-## Setup
+## Composite Action
 
 Place this workflow in e.g. `.github/workflows/dependabot-generate.yml`.
 
