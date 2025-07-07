@@ -1,12 +1,11 @@
 # dependabot-generate
 
+Generate the `dependabot.yml` based on files detected in your GitHub repository.
+
 > [!WARNING]
 >
 > This project is not stable yet and may change in backwards breaking ways at
 > any time!
-
-This action generates the `dependabot.yml` file based on the detected package
-ecosystems in the repository.
 
 ## CLI
 
