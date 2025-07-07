@@ -161,12 +161,13 @@ custom configuration for it.
   with:
     exclude-paths: ".tools/"
     additional-yaml: |
-      - package-ecosystem: "gomod"
-        directory: "/.tools"
-        allow:
-          - dependency-type: indirect
-        schedule:
-          interval: "monthly"
+      # custom updates
+          - package-ecosystem: "gomod"
+            directory: "/.tools"
+            allow:
+              - dependency-type: indirect
+            schedule:
+              interval: "monthly"
 ```
 
 ## Local Development
