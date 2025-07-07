@@ -108,7 +108,7 @@ matches wins, preventing the second rule from being evaluated.
 
 ```yaml
 - name: Generate Dependabot Config
-  uses: fredrikaverpil/dependabot-generate@v1
+  uses: fredrikaverpil/dependabot-generate@main # not yet stable!
   with:
     custom-map: |
       [

@@ -21,7 +21,7 @@ jobs:
       - name: Check out repo
         uses: actions/checkout@v4
       - name: Generate Dependabot Config
-        uses: fredrikaverpil/dependabot-generate@v1
+        uses: fredrikaverpil/dependabot-generate@main  # not yet stable!
         with:
           interval: "monthly"
           ignore-dirs: ".tools"
