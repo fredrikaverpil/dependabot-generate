@@ -1,6 +1,6 @@
 module tools
 
-go 1.24.1
+go 1.24.4
 
 tool (
 	github.com/daixiang0/gci
