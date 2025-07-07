@@ -3,7 +3,7 @@ package generator
 import (
 	"encoding/json"
 	"fmt"
-	"log"
+	"log" //nolint:depguard // No need for slog just yet.
 )
 
 // --- Type Definitions ---
@@ -21,8 +21,8 @@ type EcosystemMapEntry struct {
 
 // --- Default Ecosystem Map ---
 
-var (
-	defaultEcosystemMapJSON = `[
+func getDefaultEcosystemMapJSON() string {
+	return `[
 		{
 			"ecosystem": "uv",
 			"heuristics": [
@@ -56,13 +56,13 @@ var (
 		{"ecosystem": "devcontainers", "patterns": ["devcontainer.json"]},
 		{"ecosystem": "gitsubmodule", "patterns": [".gitmodules"]}
 	]`
-)
+}
 
 // --- Core Logic ---
 
 func GetEcosystemMap(customMapJSON string) ([]EcosystemMapEntry, error) {
 	var defaultMap []EcosystemMapEntry
-	if err := json.Unmarshal([]byte(defaultEcosystemMapJSON), &defaultMap); err != nil {
+	if err := json.Unmarshal([]byte(getDefaultEcosystemMapJSON()), &defaultMap); err != nil {
 		return nil, fmt.Errorf("failed to parse default ecosystem map: %w", err)
 	}
 

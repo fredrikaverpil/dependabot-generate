@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -10,8 +11,8 @@ func TestE2E(t *testing.T) {
 	testCases := []struct {
 		name       string
 		files      map[string]string
-		args       []string
 		goldenFile string
+		cfg        config
 	}{
 		{
 			name: "default",
@@ -21,11 +22,10 @@ func TestE2E(t *testing.T) {
 				"project-a/pyproject.toml":        "",
 				".venv/some-package/package.json": "{}",
 			},
-			args: []string{
-				"--ignore-dirs",
-				".venv",
-			},
 			goldenFile: "default.golden.yml",
+			cfg: config{
+				ignoreDirs: []string{".venv"},
+			},
 		},
 	}
 
@@ -47,17 +47,21 @@ func TestE2E(t *testing.T) {
 
 			// 2. Set up arguments for the run
 			outputFile := filepath.Join(rootDir, ".github", "dependabot.yml")
-			os.Args = []string{
-				"dependabot-generate",
-				"--scan-path",
-				rootDir,
-				"--output-filepath",
-				outputFile,
+			tc.cfg.scanPath = rootDir
+			tc.cfg.outputFilepath = outputFile
+			if tc.cfg.interval == "" {
+				tc.cfg.interval = "weekly"
 			}
-			os.Args = append(os.Args, tc.args...)
+			if tc.cfg.ignoreDirs != nil {
+				var ignored []string
+				for _, dir := range tc.cfg.ignoreDirs {
+					ignored = append(ignored, strings.TrimSpace(dir))
+				}
+				tc.cfg.ignoreDirs = ignored
+			}
 
 			// 3. Run the application logic
-			if err := run(); err != nil {
+			if err := run(tc.cfg); err != nil {
 				t.Fatalf("run() failed: %v", err)
 			}
 

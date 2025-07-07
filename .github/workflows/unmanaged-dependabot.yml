@@ -1,4 +1,7 @@
-name: Generate Dependabot Config
+# SAFE TO CUSTOMIZE - This file is copied once and not overwritten during sync
+# Source: https://github.com/fredrikaverpil/github
+
+name: dependabot
 
 on:
   push:
@@ -19,6 +22,9 @@ jobs:
         uses: actions/checkout@v4
       - name: Generate Dependabot Config
         uses: fredrikaverpil/dependabot-generate@v1
+        with:
+          interval: "monthly"
+          ignore-dirs: ".tools"
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7
         with:
