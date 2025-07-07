@@ -1,6 +1,7 @@
 # dependabot-generate
 
-Generate the `dependabot.yml` based on files detected in your GitHub repository.
+Generate the `dependabot.yml` based on files detected in your GitHub repository
+([example here](.github/dependabot.yml)).
 
 > [!WARNING]
 >
