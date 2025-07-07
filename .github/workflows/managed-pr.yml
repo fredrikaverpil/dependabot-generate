@@ -20,4 +20,3 @@ jobs:
   title:
     uses: fredrikaverpil/github/.github/workflows/pr.yml@main
     secrets: inherit
-
