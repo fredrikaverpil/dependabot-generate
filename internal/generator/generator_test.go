@@ -183,7 +183,11 @@ func TestGenerateDependabotConfig(t *testing.T) {
 			}
 
 			if config != string(expected) {
-				t.Errorf("Generated config does not match golden file.\nGot:\n%s\n\nExpected:\n%s", config, string(expected))
+				t.Errorf(
+					"Generated config does not match golden file.\nGot:\n%s\n\nExpected:\n%s",
+					config,
+					string(expected),
+				)
 			}
 		})
 	}
