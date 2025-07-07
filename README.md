@@ -21,14 +21,6 @@ This will generate a `.github/dependabot.yml` file in your current directory.
 
 ---
 
-## Features
-
-The action comes with some sane defaults, like:
-
-- Grouping of directories, for the same eco-system.
-- Grouping of minor and patch level version bumping.
-- A label `dependencies` is added to dependabot PRs.
-
 ## Setup
 
 Place this workflow in e.g. `.github/workflows/dependabot-generate.yml`.
@@ -66,9 +58,14 @@ jobs:
           delete-branch: true
 ```
 
-## Inputs
+## Sane defaults
 
-You can customize the following inputs.
+- For each directory of the same eco-system, group their minor and patch level
+  dependencies together into one PR.
+- Each major-bumped dependency update will become its own PR.
+- A label `dependencies` is added to dependabot PRs.
+
+## Customizations
 
 | Input             | Description                                               | Default  | Required |
 | ----------------- | --------------------------------------------------------- | -------- | -------- |
@@ -78,7 +75,7 @@ You can customize the following inputs.
 | `custom-map`      | JSON string to extend the default ecosystem map.          | `''`     | No       |
 | `additional-yaml` | YAML string to append to the generated dependabot config. | `''`     | No       |
 
-### Custom Ecosystem Map
+### Custom ecosystem logic
 
 You can extend and override the default ecosystem detection by providing a
 custom map. This is really only useful when resolving conflicts between
@@ -97,9 +94,11 @@ The input must be a JSON string. Each entry can define an ecosystem using simple
 
 **Example:**
 
-This example shows how to resolve a conflict between `uv` and `pip`, which both
-use `pyproject.toml`. The rules are evaluated in order. The first rule that
-matches wins, preventing the second rule from being evaluated.
+This example shows how `generate-dependabot` resolves a conflict between `uv`
+and `pip`, which both use `pyproject.toml`. The conflict lies within that we
+don't want two ecosystem entries for one `pyproject.toml` file. The rules are
+evaluated in order. The first rule that matches wins, preventing the second rule
+from being evaluated.
 
 - The first rule checks for a `uv.lock` file. If found, the directory is
   correctly identified as a `uv` project.
