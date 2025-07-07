@@ -44,11 +44,6 @@ tasks:
     cmds:
       - '{{ .GO_TOOL_CMD }} govulncheck ./...'
 
-  gosec:
-    desc: Check for security issues with gosec
-    cmds:
-      - '{{ .GO_TOOL_CMD }} gosec ./...'
-
   go-test:
     desc: Run go test
     aliases: ["test"]
