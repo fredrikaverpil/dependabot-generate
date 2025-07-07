@@ -19,5 +19,5 @@ permissions:
 jobs:
   title:
     uses: fredrikaverpil/github/.github/workflows/pr.yml@main
-    secrets:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    secrets: inherit
+
