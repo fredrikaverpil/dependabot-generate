@@ -11,10 +11,25 @@ updates:
     labels:
       - "dependencies"
 
+  - package-ecosystem: "docker"
+    directories: ["/"]
+    schedule:
+      interval: "weekly"
+    allow:
+      - dependency-type: all
+    groups:
+      docker:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+    labels:
+      - "dependencies"
+
   - package-ecosystem: "gomod"
     directories: ["/"]
     schedule:
       interval: "weekly"
+    allow:
+      - dependency-type: all
     groups:
       gomod:
         patterns: ["*"]
