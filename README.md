@@ -1,5 +1,10 @@
 # dependabot-generate
 
+> [!WARNING]
+>
+> This project is not stable yet and may change in backwards breaking ways at
+> any time!
+
 This action generates the `dependabot.yml` file based on the detected package
 ecosystems in the repository.
 
@@ -49,7 +54,7 @@ jobs:
       - name: Check out repo
         uses: actions/checkout@v4
       - name: Generate Dependabot Config
-        uses: fredrikaverpil/dependabot-generate@v1
+        uses: fredrikaverpil/dependabot-generate@main # not stable yet!
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7
         with:
