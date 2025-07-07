@@ -78,11 +78,20 @@ jobs:
 ### Custom ecosystem logic
 
 You can extend and override the default ecosystem detection by providing a
-custom map. This is really only useful when resolving conflicts between
-ecosystems that use the same file names for detection.
+custom map. This is useful for resolving conflicts between package managers that
+might use the same file names (e.g., `pyproject.toml`).
 
-The action uses a "first match wins" strategy. Your custom rules are checked
-first, giving them the highest priority.
+The action processes rules in a specific order, and this order is important.
+Your custom rules are always checked first, giving them the highest priority.
+The detection logic iterates through all rules, from your custom ones to the
+built-in defaults. It does not stop after the first ecosystem is found. This
+means a single directory can be associated with multiple ecosystems if it meets
+the criteria for each (e.g., containing both a `Dockerfile` and a `go.mod`).
+
+The "first match wins" principle applies when you have conflicting rules. If a
+rule matches a set of files, it "claims" them, and subsequent rules can be set
+up to ignore those files, preventing multiple ecosystems from being incorrectly
+assigned to the same dependency definition file.
 
 The input must be a JSON string. Each entry can define an ecosystem using simple
 `patterns` (glob support) or more advanced `heuristics`.
