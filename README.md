@@ -70,12 +70,12 @@ jobs:
 
 You can customize the following inputs.
 
-| Input         | Description                                           | Default  | Required |
-| ------------- | ----------------------------------------------------- | -------- | -------- |
-| `scan-path`   | The path to scan for dependency files.                | `.`      | No       |
-| `interval`    | The update interval for dependencies.                 | `weekly` | No       |
-| `ignore-dirs` | A comma-separated string of relative paths to ignore. | `''`     | No       |
-| `custom-map`  | JSON string to extend the default ecosystem map.      | `''`     | No       |
+| Input           | Description                                           | Default  | Required |
+| --------------- | ----------------------------------------------------- | -------- | -------- |
+| `root-path`     | The path to scan for dependency files.                | `.`      | No       |
+| `update-interval` | The update interval for dependencies.                 | `weekly` | No       |
+| `exclude-paths` | A comma-separated string of relative paths to ignore. | `''`     | No       |
+| `custom-map`    | JSON string to extend the default ecosystem map.      | `''`     | No       |
 
 ### Custom Ecosystem Map
 
@@ -157,7 +157,7 @@ go run ./cmd/dependabot-generate
 **With custom arguments:**
 
 ```bash
-go run ./cmd/dependabot-generate --scan-path="/path/to/your/project" --interval="daily"
+go run ./cmd/dependabot-generate --root-path="/path/to/your/project" --update-interval="daily"
 ```
 
 ### Releasing

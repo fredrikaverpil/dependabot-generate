@@ -1,15 +1,15 @@
 name: 'Generate Dependabot Config'
 description: 'Generates a dependabot.yml file based on the detected package ecosystems in the repository.'
 inputs:
-  scan-path:
+  root-path:
     description: 'The path to scan for dependency files.'
     required: false
     default: '.'
-  interval:
+  update-interval:
     description: 'The update interval for dependencies.'
     required: false
     default: 'weekly'
-  ignore-dirs:
+  exclude-paths:
     description: 'A comma-separated string of relative paths to ignore.'
     required: false
     default: ''
@@ -21,7 +21,7 @@ runs:
   using: 'docker'
   image: 'Dockerfile'
   args:
-    - '--scan-path=${{ inputs.scan-path }}'
-    - '--interval=${{ inputs.interval }}'
-    - '--ignore-dirs=${{ inputs.ignore-dirs }}'
+    - '--root-path=${{ inputs.root-path }}'
+    - '--update-interval=${{ inputs.update-interval }}'
+    - '--exclude-paths=${{ inputs.exclude-paths }}'
     - '--custom-map=${{ inputs.custom-map }}'

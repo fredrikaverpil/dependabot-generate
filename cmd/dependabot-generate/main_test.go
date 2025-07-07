@@ -24,7 +24,7 @@ func TestE2E(t *testing.T) {
 			},
 			goldenFile: "default.golden.yml",
 			cfg: config{
-				ignoreDirs: []string{".venv"},
+				excludePaths: []string{".venv"},
 			},
 		},
 	}
@@ -47,17 +47,17 @@ func TestE2E(t *testing.T) {
 
 			// 2. Set up arguments for the run
 			outputFile := filepath.Join(rootDir, ".github", "dependabot.yml")
-			tc.cfg.scanPath = rootDir
-			tc.cfg.outputFilepath = outputFile
-			if tc.cfg.interval == "" {
-				tc.cfg.interval = "weekly"
+			tc.cfg.rootPath = rootDir
+			tc.cfg.outputPath = outputFile
+			if tc.cfg.updateInterval == "" {
+				tc.cfg.updateInterval = "weekly"
 			}
-			if tc.cfg.ignoreDirs != nil {
+			if tc.cfg.excludePaths != nil {
 				var ignored []string
-				for _, dir := range tc.cfg.ignoreDirs {
+				for _, dir := range tc.cfg.excludePaths {
 					ignored = append(ignored, strings.TrimSpace(dir))
 				}
-				tc.cfg.ignoreDirs = ignored
+				tc.cfg.excludePaths = ignored
 			}
 
 			// 3. Run the application logic
