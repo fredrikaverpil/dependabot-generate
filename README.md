@@ -70,12 +70,13 @@ jobs:
 
 You can customize the following inputs.
 
-| Input             | Description                                           | Default  | Required |
-| ----------------- | ----------------------------------------------------- | -------- | -------- |
-| `root-path`       | The path to scan for dependency files.                | `.`      | No       |
-| `exclude-paths`   | A comma-separated string of relative paths to ignore. | `''`     | No       |
-| `update-interval` | The update interval for dependencies.                 | `weekly` | No       |
-| `custom-map`      | JSON string to extend the default ecosystem map.      | `''`     | No       |
+| Input             | Description                                               | Default  | Required |
+| ----------------- | --------------------------------------------------------- | -------- | -------- |
+| `root-path`       | The path to scan for dependency files.                    | `.`      | No       |
+| `exclude-paths`   | A comma-separated string of relative paths to ignore.     | `''`     | No       |
+| `update-interval` | The update interval for dependencies.                     | `weekly` | No       |
+| `custom-map`      | JSON string to extend the default ecosystem map.          | `''`     | No       |
+| `additional-yaml` | YAML string to append to the generated dependabot config. | `''`     | No       |
 
 ### Custom Ecosystem Map
 
@@ -141,6 +142,32 @@ seen in
 > The example is taken from how `dependabot-generate` works out of the box, so
 > you don't have to take this into consideration. This is just using a concrete
 > and realistic example to explain how the heuristics engine works.
+
+### Additional YAML
+
+For complex scenarios where the auto-detection is not sufficient, you can append
+raw YAML to the generated `dependabot.yml` file. This is useful for adding
+configurations for ecosystems that are not supported by the generator, or for
+overriding the configuration for a specific directory.
+
+A common use case is to exclude a directory from the scan and then provide a
+custom configuration for it.
+
+**Example:**
+
+```yaml
+- name: Generate Dependabot Config
+  uses: fredrikaverpil/dependabot-generate@main # not yet stable!
+  with:
+    exclude-paths: ".tools/"
+    additional-yaml: |
+      - package-ecosystem: "gomod"
+        directory: "/.tools"
+        allow:
+          - dependency-type: indirect
+        schedule:
+          interval: "monthly"
+```
 
 ## Local Development
 

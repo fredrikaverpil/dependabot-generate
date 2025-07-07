@@ -27,6 +27,26 @@ func TestE2E(t *testing.T) {
 				excludePaths: []string{".venv"},
 			},
 		},
+		{
+			name: "additional_yaml",
+			files: map[string]string{
+				"go.mod":                   "module root-project",
+				"project-a/uv.lock":        "",
+				"project-a/pyproject.toml": "",
+				".tools/go.mod":            "module tools",
+			},
+			goldenFile: "additional_yaml.golden.yml",
+			cfg: config{
+				excludePaths: []string{".tools"},
+				additionalYAML: `  - package-ecosystem: "gomod"
+    directory: "/.tools"
+    schedule:
+      interval: "monthly"
+    reviewers:
+      - "my-org/tools-team"
+`,
+			},
+		},
 	}
 
 	for _, tc := range testCases {

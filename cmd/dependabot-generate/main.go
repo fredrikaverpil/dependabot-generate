@@ -17,6 +17,7 @@ type config struct {
 	outputPath     string
 	excludePaths   []string
 	customMapJSON  string
+	additionalYAML string
 }
 
 func run(cfg config) error {
@@ -40,7 +41,13 @@ func run(cfg config) error {
 	log.Printf("Found %d directories with dependency files: %v", len(dirs), dirs)
 
 	log.Println("Generating dependabot configuration")
-	configContent, err := generator.GenerateDependabotConfig(cfg.rootPath, dirs, cfg.updateInterval, ecosystemMap)
+	configContent, err := generator.GenerateDependabotConfig(
+		cfg.rootPath,
+		dirs,
+		cfg.updateInterval,
+		ecosystemMap,
+		cfg.additionalYAML,
+	)
 	if err != nil {
 		return fmt.Errorf("error generating config: %w", err)
 	}
@@ -71,6 +78,7 @@ func main() {
 		"Comma-separated string of directories to ignore",
 	)
 	customMapJSON := flag.String("custom-map", "", "JSON string to extend the default ecosystem map")
+	additionalYAML := flag.String("additional-yaml", "", "YAML string to append to the generated dependabot config")
 	flag.Parse()
 
 	var excludePaths []string
@@ -87,6 +95,7 @@ func main() {
 		outputPath:     *outputPath,
 		excludePaths:   excludePaths,
 		customMapJSON:  *customMapJSON,
+		additionalYAML: *additionalYAML,
 	}
 
 	if err := run(cfg); err != nil {

@@ -12,6 +12,7 @@ func GenerateDependabotConfig(
 	directories []string,
 	interval string,
 	ecosystemMap []EcosystemMapEntry,
+	additionalYAML string,
 ) (string, error) {
 	ecosystemDirs := make(map[string][]string)
 
@@ -78,6 +79,11 @@ updates:
     labels:
       - "dependencies"
 `, eco, strings.Join(uniqueDirs, `", "`), interval, eco))
+	}
+
+	if additionalYAML != "" {
+		sb.WriteString("\n")
+		sb.WriteString(additionalYAML)
 	}
 
 	return sb.String(), nil

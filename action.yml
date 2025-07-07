@@ -17,6 +17,10 @@ inputs:
     description: 'JSON string to extend the default ecosystem map.'
     required: false
     default: ''
+  additional-yaml:
+    description: 'YAML string to append to the generated dependabot config.'
+    required: false
+    default: ''
 runs:
   using: 'docker'
   image: 'Dockerfile'
@@ -25,4 +29,5 @@ runs:
     - '--update-interval=${{ inputs.update-interval }}'
     - '--exclude-paths=${{ inputs.exclude-paths }}'
     - '--custom-map=${{ inputs.custom-map }}'
+    - '--additional-yaml=${{ inputs.additional-yaml }}'
 

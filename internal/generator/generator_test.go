@@ -173,7 +173,7 @@ func TestGenerateDependabotConfig(t *testing.T) {
 				}
 			}
 
-			config, err := generator.GenerateDependabotConfig(rootDir, tc.directories, "daily", ecosystemMap)
+			config, err := generator.GenerateDependabotConfig(rootDir, tc.directories, "daily", ecosystemMap, "")
 			if err != nil {
 				t.Fatalf("Expected no error, but got %v", err)
 			}
