@@ -25,6 +25,19 @@ jobs:
         with:
           interval: "monthly"
           ignore-dirs: ".tools"
+          additional-yaml: |
+            - package-ecosystem: "gomod"
+            directories: ["/.tools"]
+            allow:
+              - dependency-type: indirect
+            schedule:
+              interval: "monthly"
+            groups:
+              gomod-tools:
+                patterns: ["*"]
+                update-types: ["minor", "patch"]
+            labels:
+              - "dependencies"
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7
         with:
