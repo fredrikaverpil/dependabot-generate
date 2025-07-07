@@ -70,12 +70,12 @@ jobs:
 
 You can customize the following inputs.
 
-| Input           | Description                                           | Default  | Required |
-| --------------- | ----------------------------------------------------- | -------- | -------- |
-| `root-path`     | The path to scan for dependency files.                | `.`      | No       |
+| Input             | Description                                           | Default  | Required |
+| ----------------- | ----------------------------------------------------- | -------- | -------- |
+| `root-path`       | The path to scan for dependency files.                | `.`      | No       |
+| `exclude-paths`   | A comma-separated string of relative paths to ignore. | `''`     | No       |
 | `update-interval` | The update interval for dependencies.                 | `weekly` | No       |
-| `exclude-paths` | A comma-separated string of relative paths to ignore. | `''`     | No       |
-| `custom-map`    | JSON string to extend the default ecosystem map.      | `''`     | No       |
+| `custom-map`      | JSON string to extend the default ecosystem map.      | `''`     | No       |
 
 ### Custom Ecosystem Map
 

@@ -5,14 +5,14 @@ inputs:
     description: 'The path to scan for dependency files.'
     required: false
     default: '.'
-  update-interval:
-    description: 'The update interval for dependencies.'
-    required: false
-    default: 'weekly'
   exclude-paths:
     description: 'A comma-separated string of relative paths to ignore.'
     required: false
     default: ''
+  update-interval:
+    description: 'The update interval for dependencies.'
+    required: false
+    default: 'weekly'
   custom-map:
     description: 'JSON string to extend the default ecosystem map.'
     required: false
@@ -25,3 +25,4 @@ runs:
     - '--update-interval=${{ inputs.update-interval }}'
     - '--exclude-paths=${{ inputs.exclude-paths }}'
     - '--custom-map=${{ inputs.custom-map }}'
+
