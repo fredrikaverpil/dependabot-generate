@@ -1,3 +1,4 @@
+// Package generator provides the core logic for scanning directories and generating Dependabot configuration.
 package generator
 
 import (
@@ -10,43 +11,18 @@ import (
 	"strings"
 )
 
+// RecursivelyScanDirectories walks a directory tree from a given root path,
+// identifies directories containing recognizable package ecosystems, and returns
+// a sorted list of their relative paths. It skips any directories specified
+// in ignoreDirs.
 func RecursivelyScanDirectories(root string, ignoreDirs []string, ecosystemMap []EcosystemMapEntry) ([]string, error) {
 	directoriesWithDeps := make(map[string]struct{})
 
-	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if !d.IsDir() {
-			return nil
-		}
+	walkFunc := func(path string, d fs.DirEntry, _ error) error {
+		return processDirectoryEntry(path, d, root, ignoreDirs, ecosystemMap, directoriesWithDeps)
+	}
 
-		for _, ignored := range ignoreDirs {
-			if strings.Contains(path, ignored) {
-				log.Printf("Skipping ignored directory: %s", path)
-				return filepath.SkipDir
-			}
-		}
-
-		ecosystems, err := DetectPackageEcosystems(path, ecosystemMap)
-		if err != nil {
-			log.Printf("Warning: could not detect ecosystems in %s: %v", path, err)
-			return nil
-		}
-
-		if len(ecosystems) > 0 {
-			relPath, err := filepath.Rel(root, path)
-			if err != nil {
-				return err
-			}
-			if relPath == "." {
-				relPath = "/"
-			}
-			directoriesWithDeps[relPath] = struct{}{}
-		}
-		return nil
-	})
-	if err != nil {
+	if err := filepath.WalkDir(root, walkFunc); err != nil {
 		return nil, fmt.Errorf("error walking directories: %w", err)
 	}
 
@@ -58,46 +34,82 @@ func RecursivelyScanDirectories(root string, ignoreDirs []string, ecosystemMap [
 	return result, nil
 }
 
-func DetectPackageEcosystems(directory string, ecosystemMap []EcosystemMapEntry) ([]string, error) {
-	foundEcosystems := make(map[string]struct{})
+// processDirectoryEntry is a helper function for filepath.WalkDir. It processes
+// a single directory entry, checking for package ecosystems and adding them to
+// the directoriesWithDeps map if found.
+func processDirectoryEntry(
+	path string,
+	d fs.DirEntry,
+	root string,
+	ignoreDirs []string,
+	ecosystemMap []EcosystemMapEntry,
+	directoriesWithDeps map[string]struct{},
+) error {
+	if !d.IsDir() {
+		return nil
+	}
 
-	entries, err := os.ReadDir(directory)
+	for _, ignored := range ignoreDirs {
+		if strings.Contains(path, ignored) {
+			log.Printf("Skipping ignored directory: %s", path)
+			return filepath.SkipDir
+		}
+	}
+
+	ecosystems, err := DetectPackageEcosystems(path, ecosystemMap)
+	if err != nil {
+		log.Printf("Warning: could not detect ecosystems in %s: %v", path, err)
+		return nil
+	}
+
+	if len(ecosystems) > 0 {
+		relPath, err := filepath.Rel(root, path)
+		if err != nil {
+			return err
+		}
+		if relPath == "." {
+			relPath = "/"
+		}
+		directoriesWithDeps[relPath] = struct{}{}
+	}
+	return nil
+}
+
+// DetectPackageEcosystems scans a single directory to identify all package
+// ecosystems present, based on a provided map of detection rules. It returns a
+// sorted list of all unique ecosystems found.
+func DetectPackageEcosystems(directory string, ecosystemMap []EcosystemMapEntry) ([]string, error) {
+	filesInDir, err := getFilesInDir(directory)
 	if err != nil {
 		return nil, fmt.Errorf("could not read directory %s: %w", directory, err)
 	}
 
-	filesInDir := make([]string, 0, len(entries))
-	for _, entry := range entries {
-		if !entry.IsDir() {
-			filesInDir = append(filesInDir, entry.Name())
-		}
-	}
-
+	foundEcosystems := make(map[string]struct{})
 	for _, entry := range ecosystemMap {
-		if len(entry.Heuristics) == 0 {
-			continue
-		}
-		match, err := checkHeuristics(filesInDir, entry.Heuristics)
-		if err != nil {
-			return nil, err
-		}
-		if match {
-			log.Printf("Detected %s in %s via heuristic", entry.Ecosystem, directory)
-			foundEcosystems[entry.Ecosystem] = struct{}{}
-		}
-	}
+		var matched bool
+		var err error
 
-	for _, entry := range ecosystemMap {
-		if len(entry.Patterns) == 0 {
-			continue
+		if len(entry.Heuristics) > 0 {
+			matched, err = checkHeuristics(filesInDir, entry.Heuristics)
+			if err != nil {
+				return nil, err
+			}
+			if matched {
+				log.Printf("Detected %s in %s via heuristic", entry.Ecosystem, directory)
+				foundEcosystems[entry.Ecosystem] = struct{}{}
+				continue // First match wins
+			}
 		}
-		match, err := anyFileMatches(filesInDir, entry.Patterns...)
-		if err != nil {
-			return nil, err
-		}
-		if match {
-			log.Printf("Detected %s in %s via patterns", entry.Ecosystem, directory)
-			foundEcosystems[entry.Ecosystem] = struct{}{}
+
+		if len(entry.Patterns) > 0 {
+			matched, err = anyFileMatches(filesInDir, entry.Patterns...)
+			if err != nil {
+				return nil, err
+			}
+			if matched {
+				log.Printf("Detected %s in %s via patterns", entry.Ecosystem, directory)
+				foundEcosystems[entry.Ecosystem] = struct{}{}
+			}
 		}
 	}
 
@@ -109,6 +121,25 @@ func DetectPackageEcosystems(directory string, ecosystemMap []EcosystemMapEntry)
 	return result, nil
 }
 
+// getFilesInDir reads a directory and returns a slice of the names of the files it contains.
+func getFilesInDir(directory string) ([]string, error) {
+	entries, err := os.ReadDir(directory)
+	if err != nil {
+		return nil, err
+	}
+
+	filesInDir := make([]string, 0, len(entries))
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			filesInDir = append(filesInDir, entry.Name())
+		}
+	}
+	return filesInDir, nil
+}
+
+// checkHeuristics evaluates a set of heuristic rules against the files in a
+// directory. A rule matches if all `Present` patterns are found and no `Absent`
+// patterns are found. It returns true on the first rule that matches.
 func checkHeuristics(filesInDir []string, rules []Heuristic) (bool, error) {
 	for _, rule := range rules {
 		presentMatch := true
@@ -145,6 +176,7 @@ func checkHeuristics(filesInDir []string, rules []Heuristic) (bool, error) {
 	return false, nil
 }
 
+// anyFileMatches checks if any of the provided files match any of the given glob patterns.
 func anyFileMatches(files []string, patterns ...string) (bool, error) {
 	for _, pattern := range patterns {
 		for _, file := range files {
