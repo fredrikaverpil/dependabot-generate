@@ -13,4 +13,3 @@ jobs:
   stale:
     uses: fredrikaverpil/github/.github/workflows/stale.yml@main
     secrets: inherit
-
