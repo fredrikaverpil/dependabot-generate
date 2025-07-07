@@ -3,7 +3,7 @@ package generator
 import (
 	"fmt"
 	"io/fs"
-	"log"
+	"log" //nolint:depguard // No need for slog just yet.
 	"os"
 	"path/filepath"
 	"sort"

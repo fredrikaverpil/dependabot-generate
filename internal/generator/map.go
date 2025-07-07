@@ -3,7 +3,7 @@ package generator
 import (
 	"encoding/json"
 	"fmt"
-	"log"
+	"log" //nolint:depguard // No need for slog just yet.
 )
 
 // --- Type Definitions ---
