@@ -46,11 +46,13 @@ func run(cfg config) error {
 	}
 
 	outputDir := filepath.Dir(cfg.outputFilepath)
+	//nolint:gosec // The permissions 0o755 are standard for directories and necessary for CI/CD environments.
 	if err := os.MkdirAll(outputDir, 0o755); err != nil {
 		return fmt.Errorf("error creating output directory '%s': %w", outputDir, err)
 	}
 
 	log.Printf("Writing dependabot configuration to '%s'", cfg.outputFilepath)
+	//nolint:gosec // The permissions 0o644 are standard for non-executable files and necessary for CI/CD environments.
 	if err := os.WriteFile(cfg.outputFilepath, []byte(configContent), 0o644); err != nil {
 		return fmt.Errorf("error writing output file: %w", err)
 	}
