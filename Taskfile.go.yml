@@ -65,7 +65,7 @@ tasks:
       - find . -name "*.go" | xargs -P $(nproc) gopls check
 
   install-gopls:
-    desc: Install stylua using version from .tools/Cargo.toml
+    desc: Install gopls from latest version
     aliases: ["install"]
     cmds:
       - go install golang.org/x/tools/gopls@latest
