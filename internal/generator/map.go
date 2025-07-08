@@ -21,6 +21,11 @@ type EcosystemMapEntry struct {
 
 // --- Default Ecosystem Map ---
 
+// getDefaultEcosystemMapJSON returns the default ecosystem map in JSON format.
+//
+// Each ecosystem entry can have either:
+//   - `patterns`: An OR condition. Any file matching any pattern triggers detection.
+//   - `heuristics` `present` list: An AND condition. All patterns in the list must be matched.
 func getDefaultEcosystemMapJSON() string {
 	// https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#package-ecosystem-
 
@@ -48,8 +53,8 @@ func getDefaultEcosystemMapJSON() string {
 		{"ecosystem": "cargo", "patterns": ["Cargo.toml"]},
 		{"ecosystem": "composer", "patterns": ["composer.json"]},
 		{"ecosystem": "devcontainers", "patterns": ["devcontainer.json"]},
-		{"ecosystem": "docker", "patterns": ["Dockerfile"]},
 		{"ecosystem": "docker-compose", "patterns": ["docker-compose.yml", "docker-compose.yaml"]},
+		{"ecosystem": "docker", "patterns": ["Dockerfile"]},
 		{"ecosystem": "elm", "patterns": ["elm.json"]},
 		{"ecosystem": "gitsubmodule", "patterns": [".gitmodules"]},
 		{"ecosystem": "gomod", "patterns": ["go.mod"]},
@@ -58,7 +63,7 @@ func getDefaultEcosystemMapJSON() string {
 		{"ecosystem": "maven", "patterns": ["pom.xml"]},
 		{"ecosystem": "mix", "patterns": ["mix.exs"]},
 		{"ecosystem": "npm", "patterns": ["package.json"]},
-		{"ecosystem": "nuget", "patterns": ["*.csproj", "*.vbproj", "*.fsproj", "packages.config"]},
+		{"ecosystem": "nuget", "patterns": ["*.csproj", "*.vbproj", "*.fsproj", "packages.config", "global.json"]},
 		{"ecosystem": "pub", "patterns": ["pubspec.yaml"]},
 		{"ecosystem": "swift", "patterns": ["Package.swift"]},
 		{"ecosystem": "terraform", "patterns": ["*.tf", "*.tf.json"]}
