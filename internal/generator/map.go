@@ -22,6 +22,8 @@ type EcosystemMapEntry struct {
 // --- Default Ecosystem Map ---
 
 func getDefaultEcosystemMapJSON() string {
+	// https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#package-ecosystem-
+
 	return `[
 		{
 			"ecosystem": "uv",
