@@ -36,25 +36,28 @@ func getDefaultEcosystemMapJSON() string {
 				{"present": ["Pipfile.lock"]},
 				{"present": ["Pipfile"]},
 				{"present": ["requirements.txt"]},
+				{"present": ["requirements.in"]},
 				{"present": ["pyproject.toml"], "absent": ["uv.lock"]}
 			]
 		},
-		{"ecosystem": "gomod", "patterns": ["go.mod"]},
-		{"ecosystem": "npm", "patterns": ["package.json"]},
-		{"ecosystem": "docker", "patterns": ["Dockerfile"]},
+		{"ecosystem": "bun", "patterns": ["bun.lockb"]},
 		{"ecosystem": "bundler", "patterns": ["Gemfile"]},
-		{"ecosystem": "composer", "patterns": ["composer.json"]},
 		{"ecosystem": "cargo", "patterns": ["Cargo.toml"]},
-		{"ecosystem": "nuget", "patterns": ["*.csproj", "packages.config"]},
-		{"ecosystem": "mix", "patterns": ["mix.exs"]},
+		{"ecosystem": "composer", "patterns": ["composer.json"]},
+		{"ecosystem": "devcontainers", "patterns": ["devcontainer.json"]},
+		{"ecosystem": "docker", "patterns": ["Dockerfile", "docker-compose.yml", "docker-compose.yaml"]},
 		{"ecosystem": "elm", "patterns": ["elm.json"]},
+		{"ecosystem": "gitsubmodule", "patterns": [".gitmodules"]},
+		{"ecosystem": "gomod", "patterns": ["go.mod"]},
 		{"ecosystem": "gradle", "patterns": ["build.gradle", "build.gradle.kts"]},
+		{"ecosystem": "helm", "patterns": ["Chart.yaml"]},
 		{"ecosystem": "maven", "patterns": ["pom.xml"]},
+		{"ecosystem": "mix", "patterns": ["mix.exs"]},
+		{"ecosystem": "npm", "patterns": ["package.json"]},
+		{"ecosystem": "nuget", "patterns": ["*.csproj", "*.vbproj", "*.fsproj", "packages.config"]},
 		{"ecosystem": "pub", "patterns": ["pubspec.yaml"]},
 		{"ecosystem": "swift", "patterns": ["Package.swift"]},
-		{"ecosystem": "terraform", "patterns": ["*.tf", "*.tf.json"]},
-		{"ecosystem": "devcontainers", "patterns": ["devcontainer.json"]},
-		{"ecosystem": "gitsubmodule", "patterns": [".gitmodules"]}
+		{"ecosystem": "terraform", "patterns": ["*.tf", "*.tf.json"]}
 	]`
 }
 
