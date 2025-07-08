@@ -34,6 +34,7 @@ func getDefaultEcosystemMapJSON() string {
 		{
 			"ecosystem": "pip",
 			"heuristics": [
+				{"present": ["pdm.lock", "pyproject.toml"]},
 				{"present": ["poetry.lock", "pyproject.toml"]},
 				{"present": ["Pipfile.lock"]},
 				{"present": ["Pipfile"]},
