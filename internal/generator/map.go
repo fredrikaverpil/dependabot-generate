@@ -24,11 +24,12 @@ type EcosystemMapEntry struct {
 // getDefaultEcosystemMapJSON returns the default ecosystem map in JSON format.
 //
 // Each ecosystem entry can have either:
-//   - `patterns`: An OR condition. Any file matching any pattern triggers detection.
+//   - `patterns`: An OR condition. Any file matching the glob pattern triggers detection.
 //   - `heuristics` `present` list: An AND condition. All patterns in the list must be matched.
+//
+// List of ecosystems/package managers:
+// https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#package-ecosystem-
 func getDefaultEcosystemMapJSON() string {
-	// https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#package-ecosystem-
-
 	return `[
 		{
 			"ecosystem": "uv",
@@ -53,7 +54,7 @@ func getDefaultEcosystemMapJSON() string {
 		{"ecosystem": "cargo", "patterns": ["Cargo.toml"]},
 		{"ecosystem": "composer", "patterns": ["composer.json"]},
 		{"ecosystem": "devcontainers", "patterns": ["devcontainer.json"]},
-		{"ecosystem": "docker-compose", "patterns": ["docker-compose.yml", "docker-compose.yaml"]},
+		{"ecosystem": "docker-compose", "patterns": ["docker-compose.y?ml"]},
 		{"ecosystem": "docker", "patterns": ["Dockerfile"]},
 		{"ecosystem": "elm", "patterns": ["elm.json"]},
 		{"ecosystem": "gitsubmodule", "patterns": [".gitmodules"]},
