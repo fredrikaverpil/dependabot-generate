@@ -18,10 +18,4 @@ var Config = &pk.Config{
 			),
 		),
 	),
-
-	Plan: &pk.PlanConfig{
-		Shims: &pk.ShimConfig{
-			Posix: true, // pok (POSIX shell script)
-		},
-	},
 }
