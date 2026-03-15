@@ -31,7 +31,7 @@ func GenerateDependabotConfig(
 	}
 
 	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf(`version: 2
+	fmt.Fprintf(&sb, `version: 2
 updates:
   - package-ecosystem: "github-actions"
     directories: ["/", ".github/actions/*/*.yml", ".github/actions/*/*.yaml", "action.yml", "action.yaml", "actions/*/*.yml", "actions/*/*.yaml"]
@@ -43,7 +43,7 @@ updates:
         update-types: ["minor", "patch"]
     labels:
       - "dependencies"
-`, interval))
+`, interval)
 
 	// Sort ecosystems for deterministic output
 	var sortedEcosystems []string
@@ -65,7 +65,7 @@ updates:
 		}
 		sort.Strings(uniqueDirs)
 
-		sb.WriteString(fmt.Sprintf(`
+		fmt.Fprintf(&sb, `
   - package-ecosystem: "%s"
     directories: ["%s"]
     schedule:
@@ -78,7 +78,7 @@ updates:
         update-types: ["minor", "patch"]
     labels:
       - "dependencies"
-`, eco, strings.Join(uniqueDirs, `", "`), interval, eco))
+`, eco, strings.Join(uniqueDirs, `", "`), interval, eco)
 	}
 
 	if additionalYAML != "" {
