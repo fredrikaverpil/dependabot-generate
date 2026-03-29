@@ -1,5 +1,5 @@
 # Start from the official Go image.
-FROM golang:1.24-alpine
+FROM golang:1.25-alpine
 
 # Copy the entire repository into the /app directory in the container.
 WORKDIR /app
